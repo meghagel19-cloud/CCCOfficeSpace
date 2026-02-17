@@ -13,20 +13,43 @@ st.set_page_config(page_title=f"Desk Booking – {YEAR}", layout="wide")
 st.title(f"📅 Office Desk Booking – {YEAR}")
 
 # === Google Sheets Setup ===
-if "\\n" in creds_dict["private_key"]:
-    creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
-creds_dict = st.secrets["gcp_service_account"]
-creds = ServiceAccountCredentials.from_json_keyfile_dict(
-    creds_dict,
-    scopes=[
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive",
-    ],
-)
-gc = gspread.authorize(creds)
-SPREADSHEET_ID = st.secrets["gcp_service_account"]["spreadsheet_id"]
-sh = gc.open_by_key(SPREADSHEET_ID)
-worksheet = sh.sheet1
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from gspread.exceptions import APIError
+
+try:
+    # Load credentials from Streamlit Secrets
+    creds_dict = st.secrets["gcp_service_account"]
+
+    # Fix private_key newlines (required for Streamlit Secrets)
+    if "\\n" in creds_dict["private_key"]:
+        creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+
+    # Create Google credentials object
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(
+        creds_dict,
+        scopes=[
+            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/drive",
+        ],
+    )
+
+    # Authorize gspread
+    gc = gspread.authorize(creds)
+
+    # Open your spreadsheet
+    SPREADSHEET_ID = creds_dict["spreadsheet_id"]
+    sh = gc.open_by_key(SPREADSHEET_ID)
+    worksheet = sh.sheet1
+
+    st.success("✅ Connected to Google Sheets successfully!")
+
+except KeyError as ke:
+    st.error(f"Missing key in Secrets.toml: {ke}")
+except APIError as api_err:
+    st.error(f"Google Sheets API error: {api_err}")
+except Exception as e:
+    st.error(f"Failed to connect to Google Sheets: {e}")
 
 # === Desk & Team Setup ===
 desk_labels = [
