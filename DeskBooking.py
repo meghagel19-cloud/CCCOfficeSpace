@@ -98,8 +98,8 @@ try:
             idx = desk_labels.index(desk_name) + 1
             key = f"{date_str}_desk{idx}"
             bookings[key] = user
-except Exception:
-    st.error("Could not load existing bookings from Google Sheets.")
+except Exception as e:
+    st.error(f"Could not load existing bookings from Google Sheets: {e}")
 
 # === Callback to write a single booking to Google Sheets ===
 def write_booking(key):
