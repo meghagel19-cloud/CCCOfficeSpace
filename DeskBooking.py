@@ -102,23 +102,29 @@ except Exception as e:
     st.error(f"Could not load existing bookings from Google Sheets: {e}")
 
 # === Callback to write a single booking to Google Sheets ===
+# === Callback to write a single booking to Google Sheets ===
 def write_booking(key):
+    """
+    Write a booking to Google Sheets when a dropdown changes.
+    Only appends if the value has changed.
+    """
     val = st.session_state[key]
     prev = bookings.get(key)
     if val == prev:
-        return
-    # continue with reload logic for blank selection
-    date_str, desk = key.split("_")
-    idx = int(desk.replace("desk", ""))
+        return  # no change, do nothing
+
+    # Extract date and desk index from key
     try:
+        date_str, desk = key.split("_")
+        idx = int(desk.replace("desk", ""))
+        # Append the booking row
         worksheet.append_row([date_str, desk_labels[idx-1], val])
         bookings[key] = val
         st.success(f"Booked {val} for {desk_labels[idx-1]} on {date_str}")
-    except APIError:
-        st.error(
-            "Failed to save booking.\n"
-            "Ensure service account has edit rights and sheet ID is correct."
-        )
+    except ValueError:
+        st.error(f"Invalid key format: {key}")
+    except Exception as e:
+        st.error(f"Failed to save booking: {e}")
 
 # === Calendar Rendering & Dropdowns ===
 
@@ -141,36 +147,28 @@ if today.year == YEAR:
 # Render full year (Jan–Dec)
 for month in range(1, 13):
     cal = calendar.monthcalendar(YEAR, month)
-    # expand only if this month is the current month in the same year
     expanded = (month == today.month and today.year == YEAR)
     with st.expander(f"{calendar.month_name[month]} {YEAR}", expanded=expanded):
         for week in cal:
-            # Only create columns for Monday (0) to Friday (4)
             cols = st.columns(5)
-            for i, day in enumerate(week[:5]):  # Only loop through Monday–Friday
+            for i, day in enumerate(week[:5]):
                 with cols[i]:
                     if day:
                         date_str = f"{YEAR}-{month:02d}-{day:02d}"
                         st.markdown(f'<a name="{date_str}"></a>', unsafe_allow_html=True)
                         st.markdown(f"### {calendar.day_abbr[i]} {day}")
+
                         for idx, desk_name in enumerate(desk_labels, start=1):
                             key = f"{date_str}_desk{idx}"
-                            # sync session state with latest booking from sheet
+
+                            # Initialize session state only if key is missing
                             if key not in st.session_state:
-                                sheet_booking = bookings.get(key, "")
-                                if sheet_booking:
-                                    st.session_state[key] = sheet_booking
-                                # --- Commented out default team member assignment ---
-                                # else:
-                                #     desk_default = DEFAULT_DESK_ASSIGNMENTS.get(desk_name, "")
-                                #     st.session_state[key] = desk_default
-                                else:
-                                    st.session_state[key] = ""
-                            elif st.session_state[key] != bookings.get(key, ""):
                                 st.session_state[key] = bookings.get(key, "")
-                            # dropdown writes to session state and triggers write
+
+                            # Set default selection safely
                             default = st.session_state.get(key, "")
                             idx_default = team_members.index(default) if default in team_members else 0
+
                             st.selectbox(
                                 label=desk_name,
                                 options=team_members,
