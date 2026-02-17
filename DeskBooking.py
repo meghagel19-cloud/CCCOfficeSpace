@@ -48,10 +48,10 @@ team_members = [" ","FREE", "PS", "PL", "MF","PW", "JR", "MH", "AK", "MC", "GM",
 #     "Tech Head Office": "PL",
 #     "Cyber Desk 1": "MF",
 #     "Cyber Desk 2": "PW",
-#     "Admin Desk": "JR"
-#     "Temp Desk": "MH"
-#     "DCIS Desk 1": "AK"
-#     "DCIS Desk 2": "MC"
+#     "Admin Desk": "JR",
+#     "Temp Desk": "MH",
+#     "DCIS Desk 1": "AK",
+#     "DCIS Desk 2": "MC",
 #     "Core Desk 1": "DG",
 #     "Core Desk 2": "GM",
 #     "Open Space Desk": "CG"
