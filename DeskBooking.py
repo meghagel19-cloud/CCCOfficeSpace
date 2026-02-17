@@ -13,8 +13,8 @@ st.set_page_config(page_title=f"Desk Booking – {YEAR}", layout="wide")
 st.title(f"📅 Office Desk Booking – {YEAR}")
 
 # === Google Sheets Setup ===
-st.write("Secrets keys:", list(creds_dict.keys()))
-st.write("Private key starts with:", creds_dict["private_key"][:30])
+if "\\n" in creds_dict["private_key"]:
+    creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
 creds_dict = st.secrets["gcp_service_account"]
 creds = ServiceAccountCredentials.from_json_keyfile_dict(
     creds_dict,
