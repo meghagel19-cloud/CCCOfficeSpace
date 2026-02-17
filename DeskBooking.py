@@ -1,4 +1,5 @@
 import streamlit as st
+st.write(st.secrets)
 import calendar
 from datetime import datetime
 import gspread
